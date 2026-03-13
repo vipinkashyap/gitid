@@ -1,5 +1,9 @@
 # GitID
 
+[![CI](https://github.com/vipinkashyap/gitid/actions/workflows/ci.yml/badge.svg)](https://github.com/vipinkashyap/gitid/actions/workflows/ci.yml)
+[![Release](https://github.com/vipinkashyap/gitid/actions/workflows/release.yml/badge.svg)](https://github.com/vipinkashyap/gitid/actions/workflows/release.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 **Multi-profile Git identity manager.** Automatically switches your name, email, SSH key, and credentials based on which repo you're in.
 
 If you juggle work, personal, and open-source Git accounts on the same machine, GitID makes sure you never commit with the wrong identity again.
@@ -26,7 +30,10 @@ Every developer with multiple Git accounts has committed with the wrong email. G
 
 ```bash
 # Install script (macOS / Linux)
-curl -fsSL https://gitid.dev/install | sh
+curl -fsSL https://raw.githubusercontent.com/vipinkashyap/gitid/main/install.sh | sh
+
+# Or from a GitHub release
+# See https://github.com/vipinkashyap/gitid/releases
 
 # Or build from source
 cargo install --path crates/gitid-cli
@@ -35,14 +42,14 @@ cargo install --path crates/git-credential-gitid
 
 ### Desktop App
 
-Download from [Releases](https://github.com/vipinkashyap/gitid/releases) — available for macOS (.dmg) and Linux (.AppImage).
+Download from [Releases](https://github.com/vipinkashyap/gitid/releases) — available for macOS (.dmg) and Linux (.AppImage, .deb).
 
 Or build from source:
 
 ```bash
 cd tauri-app
 npm install
-cargo tauri build
+npm run tauri build
 ```
 
 ## Quick Start
@@ -123,13 +130,13 @@ gitid team check                    Validate against team constraints
 The Tauri desktop app provides a visual interface for managing profiles, rules, and monitoring identity status.
 
 **Tabs:**
-- **Dashboard** — Identity Guard status, active profile, smart suggestions, repo scanner
+- **Dashboard** — CLI install prompt, Identity Guard status, active profile, smart suggestions, repo scanner
 - **Profiles** — Create, edit, delete profiles with SSH key testing
-- **Rules** — Visual rule editor with priority ordering
+- **Rules** — Visual rule editor with drag-to-reorder priorities and delete confirmation
 - **Doctor** — System health checks with suggested fixes
 - **Help** — In-app guides for CLI, IDE integration, and troubleshooting
 
-**Features:** Dark mode, keyboard accessible (WCAG), first-run setup wizard with auto-detection.
+**Features:** Dark mode, keyboard accessible (WCAG compliant dialogs and tabs), first-run setup wizard with auto-detection, bundled CLI installer.
 
 ## IDE Integration
 
@@ -138,6 +145,7 @@ GitID works with any editor or Git GUI:
 - **Identity Guard** fires on every commit regardless of the tool (VS Code, JetBrains, Sublime Merge, etc.)
 - **Shell hook** works in any embedded terminal that loads your shell profile
 - Run `gitid resolve` once per project to write the identity into the repo's local Git config
+- **VS Code extension** (in `vscode-extension/`) — auto-resolves identity on workspace open and shows active profile in the status bar
 
 See the in-app Help tab for detailed setup instructions per editor.
 
@@ -177,7 +185,8 @@ Built with Rust for performance and safety:
 - **gitid-core** — Core library: profiles, rules, resolver, SSH, keychain, guard, learning, detection, team constraints
 - **gitid-cli** — CLI tool (clap-based, 10+ command families)
 - **git-credential-gitid** — Git credential helper binary
-- **tauri-app** — Desktop GUI (Tauri 2 + React + TypeScript + Tailwind)
+- **tauri-app** — Desktop GUI (Tauri 2 + React + TypeScript + Tailwind + shadcn/ui)
+- **vscode-extension** — VS Code extension for automatic identity resolution
 
 ## Contributing
 
@@ -193,10 +202,14 @@ cargo run -p gitid-cli -- status
 # Run the desktop app
 cd tauri-app
 npm install
-cargo tauri dev
+npm run tauri dev
 
 # Run tests
-cargo test --workspace
+cargo test --workspace --exclude gitid-tauri
+
+# Check formatting and lints before pushing
+cargo fmt --all
+cargo clippy --workspace --all-targets --exclude gitid-tauri -- -D warnings
 ```
 
 ## License
