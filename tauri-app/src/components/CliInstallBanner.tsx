@@ -1,13 +1,11 @@
 import { useState, useEffect } from "react";
 import * as api from "@/lib/tauri-api";
-import { Card, CardContent, Button, Badge } from "./ui/primitives";
+import { Card, CardContent, Button } from "./ui/primitives";
 import {
-  Terminal,
   Download,
   CheckCircle2,
   AlertTriangle,
   Loader2,
-  ExternalLink,
 } from "lucide-react";
 
 export default function CliInstallBanner() {
