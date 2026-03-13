@@ -109,6 +109,15 @@ jobs:
         working-directory: tauri-app
         run: npm ci
 
+      - name: Build CLI binaries for bundling
+        run: |
+          cargo build --release --target ${{ matrix.target }} -p gitid-cli
+          cargo build --release --target ${{ matrix.target }} -p git-credential-gitid
+          # Tauri resources expect binaries at target/release/, create symlinks
+          mkdir -p target/release
+          ln -sf "$(pwd)/target/${{ matrix.target }}/release/gitid" target/release/gitid
+          ln -sf "$(pwd)/target/${{ matrix.target }}/release/git-credential-gitid" target/release/git-credential-gitid
+
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@v0
         env:

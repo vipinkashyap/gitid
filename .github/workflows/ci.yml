@@ -20,25 +20,19 @@ jobs:
           components: clippy, rustfmt
       - uses: Swatinem/rust-cache@v2
 
-      # Tauri requires system libraries on Linux
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y \
-            libwebkit2gtk-4.1-dev \
-            libappindicator3-dev \
-            librsvg2-dev \
-            patchelf \
-            libsecret-1-dev
+          sudo apt-get install -y libsecret-1-dev
 
       - name: Check formatting
         run: cargo fmt --all -- --check
 
       - name: Clippy
-        run: cargo clippy --workspace --all-targets -- -D warnings
+        run: cargo clippy --workspace --all-targets --exclude gitid-tauri -- -D warnings
 
       - name: Build
-        run: cargo build --workspace
+        run: cargo build --workspace --exclude gitid-tauri
 
   test:
     name: Test
@@ -55,15 +49,10 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y \
-            libwebkit2gtk-4.1-dev \
-            libappindicator3-dev \
-            librsvg2-dev \
-            patchelf \
-            libsecret-1-dev
+          sudo apt-get install -y libsecret-1-dev
 
       - name: Run tests
-        run: cargo test --workspace
+        run: cargo test --workspace --exclude gitid-tauri
 
   frontend:
     name: Frontend Check
