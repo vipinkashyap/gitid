@@ -1,0 +1,23 @@
+[workspace]
+members = [
+    "crates/gitid-core",
+    "crates/git-credential-gitid",
+    "crates/gitid-cli",
+    "tauri-app/src-tauri",
+]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+authors = ["Vipin Sharma"]
+repository = "https://github.com/vipinkashyap/gitid"
+description = "Multi-profile Git identity manager"
+
+[workspace.dependencies]
+gitid-core = { path = "crates/gitid-core" }
+serde = { version = "1", features = ["derive"] }
+serde_yaml = "0.9"
+thiserror = "2"
+dirs = "6"

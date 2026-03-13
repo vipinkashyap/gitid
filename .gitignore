@@ -1,0 +1,27 @@
+# Rust
+/target/
+**/*.rs.bk
+# Note: Cargo.lock IS committed — this project produces binaries
+
+# Node / Frontend
+tauri-app/node_modules/
+tauri-app/dist/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+*.code-workspace
+
+# Tauri build output
+tauri-app/src-tauri/target/
+
+# Environment
+.env
+.env.local

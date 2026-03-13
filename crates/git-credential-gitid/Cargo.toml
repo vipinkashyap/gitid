@@ -1,0 +1,15 @@
+[package]
+name = "git-credential-gitid"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "Git credential helper that automatically selects the right identity"
+
+[[bin]]
+name = "git-credential-gitid"
+path = "src/main.rs"
+
+[dependencies]
+gitid-core = { workspace = true }
+thiserror = { workspace = true }
