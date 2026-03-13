@@ -146,10 +146,7 @@ fn handle_get() -> Result<(), Box<dyn std::error::Error>> {
         let mut out = stdout.lock();
 
         // Use the profile's username, or fall back to common defaults
-        let username = profile
-            .username
-            .as_deref()
-            .unwrap_or("x-access-token"); // GitHub PAT format
+        let username = profile.username.as_deref().unwrap_or("x-access-token"); // GitHub PAT format
 
         writeln!(out, "username={}", username)?;
         writeln!(out, "password={}", token)?;

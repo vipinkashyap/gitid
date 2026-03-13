@@ -19,11 +19,7 @@ pub struct SshKeyInfo {
 }
 
 /// Generate a new SSH key pair for a profile.
-pub fn generate_key(
-    email: &str,
-    key_path: &Path,
-    key_type: &str,
-) -> Result<SshKeyInfo> {
+pub fn generate_key(email: &str, key_path: &Path, key_type: &str) -> Result<SshKeyInfo> {
     // Ensure the parent directory exists
     if let Some(parent) = key_path.parent() {
         if !parent.exists() {

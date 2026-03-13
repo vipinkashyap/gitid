@@ -5,12 +5,12 @@
 //! that would match frequently-used patterns.
 
 use crate::error::{Error, Result};
-use crate::resolver::{DirectoryRule, HostRule, RemoteRule, RuleStore};
+use crate::resolver::RuleStore;
 use crate::store;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 /// A single resolve event logged for pattern learning.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -371,9 +371,9 @@ fn find_common_parents(dirs: &[PathBuf]) -> Vec<(PathBuf, usize)> {
     // Keep the most specific (deepest) parent for each count tier
     let mut filtered = Vec::new();
     for (path, count) in &results {
-        let dominated = filtered.iter().any(|(existing, ec): &(PathBuf, usize)| {
-            *ec >= *count && path.starts_with(existing)
-        });
+        let dominated = filtered
+            .iter()
+            .any(|(existing, ec): &(PathBuf, usize)| *ec >= *count && path.starts_with(existing));
         if !dominated {
             filtered.push((path.clone(), *count));
         }

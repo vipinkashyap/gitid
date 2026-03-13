@@ -1312,6 +1312,7 @@ dependencies = [
  "shellexpand",
  "tempfile",
  "thiserror 2.0.18",
+ "toml 0.8.2",
  "which",
 ]
 
@@ -1319,6 +1320,7 @@ dependencies = [
 name = "gitid-tauri"
 version = "0.1.0"
 dependencies = [
+ "dirs",
  "gitid-core",
  "serde",
  "serde_json",

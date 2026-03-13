@@ -523,9 +523,12 @@ pub fn guard_status() -> Result<GuardStatusDto, String> {
     let verdict = guard::check(&cwd);
 
     let (verdict_str, profile, expected, actual) = match &verdict {
-        guard::GuardVerdict::Ok { profile, email } => {
-            ("ok".to_string(), Some(profile.clone()), Some(email.clone()), None)
-        }
+        guard::GuardVerdict::Ok { profile, email } => (
+            "ok".to_string(),
+            Some(profile.clone()),
+            Some(email.clone()),
+            None,
+        ),
         guard::GuardVerdict::Mismatch {
             profile,
             expected_email,
@@ -603,11 +606,7 @@ pub fn get_activity_count() -> Result<usize, String> {
 }
 
 #[tauri::command]
-pub fn apply_suggestion(
-    rule_type: String,
-    pattern: String,
-    profile: String,
-) -> Result<(), String> {
+pub fn apply_suggestion(rule_type: String, pattern: String, profile: String) -> Result<(), String> {
     let mut rules = store::load_rules().map_err(|e| e.to_string())?;
     match rule_type.as_str() {
         "directory" => rules.add_directory_rule(&pattern, &profile),

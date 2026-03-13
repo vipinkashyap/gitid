@@ -195,13 +195,11 @@ pub fn resolve(
     // 2. Check directory rules
     if let Some(ref cwd) = context.cwd {
         for rule in &rules.directory {
-            if match_directory(cwd, &rule.path) {
-                if profiles.contains(&rule.profile) {
-                    return Ok(ResolveResult {
-                        profile_name: rule.profile.clone(),
-                        reason: ResolveReason::DirectoryRule(rule.path.clone()),
-                    });
-                }
+            if match_directory(cwd, &rule.path) && profiles.contains(&rule.profile) {
+                return Ok(ResolveResult {
+                    profile_name: rule.profile.clone(),
+                    reason: ResolveReason::DirectoryRule(rule.path.clone()),
+                });
             }
         }
     }
@@ -209,13 +207,11 @@ pub fn resolve(
     // 3. Check remote URL patterns
     if let Some(ref remote_url) = context.remote_url {
         for rule in &rules.remote {
-            if match_glob_pattern(remote_url, &rule.pattern) {
-                if profiles.contains(&rule.profile) {
-                    return Ok(ResolveResult {
-                        profile_name: rule.profile.clone(),
-                        reason: ResolveReason::RemoteRule(rule.pattern.clone()),
-                    });
-                }
+            if match_glob_pattern(remote_url, &rule.pattern) && profiles.contains(&rule.profile) {
+                return Ok(ResolveResult {
+                    profile_name: rule.profile.clone(),
+                    reason: ResolveReason::RemoteRule(rule.pattern.clone()),
+                });
             }
         }
     }
@@ -223,13 +219,11 @@ pub fn resolve(
     // 4. Check host defaults
     if let Some(ref host) = context.host {
         for rule in &rules.host {
-            if rule.host == *host {
-                if profiles.contains(&rule.profile) {
-                    return Ok(ResolveResult {
-                        profile_name: rule.profile.clone(),
-                        reason: ResolveReason::HostDefault(rule.host.clone()),
-                    });
-                }
+            if rule.host == *host && profiles.contains(&rule.profile) {
+                return Ok(ResolveResult {
+                    profile_name: rule.profile.clone(),
+                    reason: ResolveReason::HostDefault(rule.host.clone()),
+                });
             }
         }
     }
@@ -331,22 +325,22 @@ pub fn extract_host_from_url(url: &str) -> Option<String> {
             .map(|h| h.to_string());
     }
 
-    // SSH format: git@github.com:user/repo.git
-    if url.contains('@') && url.contains(':') {
-        return url
-            .split('@')
-            .nth(1)
-            .and_then(|rest| rest.split(':').next())
-            .map(|h| h.to_string());
-    }
-
-    // SSH format: ssh://git@github.com/user/repo.git
+    // SSH protocol format: ssh://git@github.com/user/repo.git
     if url.starts_with("ssh://") {
         return url
             .split("://")
             .nth(1)
             .and_then(|rest| rest.split('@').nth(1))
             .and_then(|rest| rest.split('/').next())
+            .map(|h| h.to_string());
+    }
+
+    // SCP format: git@github.com:user/repo.git
+    if url.contains('@') && url.contains(':') {
+        return url
+            .split('@')
+            .nth(1)
+            .and_then(|rest| rest.split(':').next())
             .map(|h| h.to_string());
     }
 

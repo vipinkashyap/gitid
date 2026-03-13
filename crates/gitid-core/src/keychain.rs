@@ -86,7 +86,7 @@ pub fn test_token(host: &str, token: &str) -> Result<bool> {
         .env("GIT_TERMINAL_PROMPT", "0")
         .env(
             "GIT_CONFIG_VALUE_0",
-            &format!(
+            format!(
                 "!f() {{ echo \"username=token\"; echo \"password={}\"; }}; f",
                 token
             ),

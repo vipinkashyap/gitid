@@ -163,8 +163,7 @@ mod tests {
 
     #[test]
     fn test_resolved_ssh_key() {
-        let profile = Profile::new("Test", "test@test.dev")
-            .with_ssh_key("~/.ssh/id_ed25519");
+        let profile = Profile::new("Test", "test@test.dev").with_ssh_key("~/.ssh/id_ed25519");
 
         let resolved = profile.resolved_ssh_key().unwrap();
         assert!(resolved.to_str().unwrap().contains(".ssh/id_ed25519"));

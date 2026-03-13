@@ -4,7 +4,7 @@
 //! that profile resolution, config writing, guard checks, and learning
 //! all work end-to-end.
 
-use gitid_core::{config_writer, guard, learn, profile::Profile, resolver, store};
+use gitid_core::{config_writer, learn, profile::Profile, profile::ProfileStore, resolver};
 use std::fs;
 use std::path::Path;
 use std::process::Command;
@@ -69,6 +69,14 @@ fn personal_profile() -> Profile {
     Profile::new("Personal", "me@personal.com").with_hosts(vec!["github.com".to_string()])
 }
 
+/// Create a ProfileStore with work and personal profiles.
+fn test_profiles() -> ProfileStore {
+    let mut store = ProfileStore::new();
+    store.set("work", work_profile());
+    store.set("personal", personal_profile());
+    store
+}
+
 // =============================================================================
 // Profile tests
 // =============================================================================
@@ -99,14 +107,19 @@ fn test_directory_rule_resolution() {
     fs::create_dir_all(&work_dir).unwrap();
     init_git_repo(&work_dir);
 
-    let mut rules = resolver::Rules::default();
-    let work_pattern = format!("{}/**", tmp.path().join("work").display());
+    let profiles = test_profiles();
+    let mut rules = resolver::RuleStore::default();
+    let canonical_work = fs::canonicalize(tmp.path().join("work")).unwrap();
+    let work_pattern = format!("{}/**", canonical_work.display());
     rules.add_directory_rule(&work_pattern, "work");
 
-    let context = resolver::build_context(&work_dir).unwrap();
-    let result = rules.resolve(&context);
+    let context = resolver::build_context(&work_dir);
+    let result = resolver::resolve(&context, &rules, &profiles);
 
-    assert_eq!(result.as_ref().map(|r| r.profile.as_str()), Some("work"));
+    assert_eq!(
+        result.ok().map(|r| r.profile_name),
+        Some("work".to_string())
+    );
 }
 
 #[test]
@@ -116,13 +129,17 @@ fn test_remote_rule_resolution() {
     fs::create_dir_all(&repo_dir).unwrap();
     init_git_repo_with_remote(&repo_dir, "git@github.com:mycompany/project.git");
 
-    let mut rules = resolver::Rules::default();
-    rules.add_remote_rule("github.com/mycompany/*", "work");
+    let profiles = test_profiles();
+    let mut rules = resolver::RuleStore::default();
+    rules.add_remote_rule("*github.com*mycompany*", "work");
 
-    let context = resolver::build_context(&repo_dir).unwrap();
-    let result = rules.resolve(&context);
+    let context = resolver::build_context(&repo_dir);
+    let result = resolver::resolve(&context, &rules, &profiles);
 
-    assert_eq!(result.as_ref().map(|r| r.profile.as_str()), Some("work"));
+    assert_eq!(
+        result.ok().map(|r| r.profile_name),
+        Some("work".to_string())
+    );
 }
 
 #[test]
@@ -132,13 +149,17 @@ fn test_host_rule_resolution() {
     fs::create_dir_all(&repo_dir).unwrap();
     init_git_repo_with_remote(&repo_dir, "git@gitlab.internal.com:team/project.git");
 
-    let mut rules = resolver::Rules::default();
+    let profiles = test_profiles();
+    let mut rules = resolver::RuleStore::default();
     rules.add_host_rule("gitlab.internal.com", "work");
 
-    let context = resolver::build_context(&repo_dir).unwrap();
-    let result = rules.resolve(&context);
+    let context = resolver::build_context(&repo_dir);
+    let result = resolver::resolve(&context, &rules, &profiles);
 
-    assert_eq!(result.as_ref().map(|r| r.profile.as_str()), Some("work"));
+    assert_eq!(
+        result.ok().map(|r| r.profile_name),
+        Some("work".to_string())
+    );
 }
 
 #[test]
@@ -148,30 +169,32 @@ fn test_default_fallback() {
     fs::create_dir_all(&repo_dir).unwrap();
     init_git_repo(&repo_dir);
 
-    let mut rules = resolver::Rules::default();
+    let profiles = test_profiles();
+    let mut rules = resolver::RuleStore::default();
     rules.set_default("personal");
 
-    let context = resolver::build_context(&repo_dir).unwrap();
-    let result = rules.resolve(&context);
+    let context = resolver::build_context(&repo_dir);
+    let result = resolver::resolve(&context, &rules, &profiles);
 
     assert_eq!(
-        result.as_ref().map(|r| r.profile.as_str()),
-        Some("personal")
+        result.ok().map(|r| r.profile_name),
+        Some("personal".to_string())
     );
 }
 
 #[test]
-fn test_no_match_returns_none() {
+fn test_no_match_returns_error() {
     let tmp = TempDir::new().unwrap();
     let repo_dir = tmp.path().join("repo");
     fs::create_dir_all(&repo_dir).unwrap();
     init_git_repo(&repo_dir);
 
-    let rules = resolver::Rules::default();
-    let context = resolver::build_context(&repo_dir).unwrap();
-    let result = rules.resolve(&context);
+    let profiles = test_profiles();
+    let rules = resolver::RuleStore::default();
+    let context = resolver::build_context(&repo_dir);
+    let result = resolver::resolve(&context, &rules, &profiles);
 
-    assert!(result.is_none());
+    assert!(result.is_err());
 }
 
 #[test]
@@ -181,16 +204,21 @@ fn test_priority_order_directory_beats_remote() {
     fs::create_dir_all(&repo_dir).unwrap();
     init_git_repo_with_remote(&repo_dir, "git@github.com:personal/project.git");
 
-    let mut rules = resolver::Rules::default();
-    let work_pattern = format!("{}/**", tmp.path().join("work").display());
+    let profiles = test_profiles();
+    let mut rules = resolver::RuleStore::default();
+    let canonical_work = fs::canonicalize(tmp.path().join("work")).unwrap();
+    let work_pattern = format!("{}/**", canonical_work.display());
     rules.add_directory_rule(&work_pattern, "work");
-    rules.add_remote_rule("github.com/personal/*", "personal");
+    rules.add_remote_rule("*github.com*personal*", "personal");
 
-    let context = resolver::build_context(&repo_dir).unwrap();
-    let result = rules.resolve(&context);
+    let context = resolver::build_context(&repo_dir);
+    let result = resolver::resolve(&context, &rules, &profiles);
 
     // Directory rule should win (higher priority)
-    assert_eq!(result.as_ref().map(|r| r.profile.as_str()), Some("work"));
+    assert_eq!(
+        result.ok().map(|r| r.profile_name),
+        Some("work".to_string())
+    );
 }
 
 // =============================================================================
@@ -205,7 +233,7 @@ fn test_apply_profile_to_repo() {
     init_git_repo(&repo_dir);
 
     let profile = work_profile();
-    config_writer::apply_profile_to_repo(&repo_dir, &profile).unwrap();
+    config_writer::apply_profile_to_repo(&profile, &repo_dir).unwrap();
 
     assert_eq!(
         read_git_config(&repo_dir, "user.name").as_deref(),
@@ -225,7 +253,7 @@ fn test_apply_profile_with_ssh_key() {
     init_git_repo(&repo_dir);
 
     let profile = Profile::new("Dev", "dev@company.com").with_ssh_key("/home/dev/.ssh/work_key");
-    config_writer::apply_profile_to_repo(&repo_dir, &profile).unwrap();
+    config_writer::apply_profile_to_repo(&profile, &repo_dir).unwrap();
 
     let ssh_command = read_git_config(&repo_dir, "core.sshCommand");
     assert!(ssh_command.is_some());
@@ -286,8 +314,8 @@ fn test_activity_log_write_and_read() {
     // Create a few events
     let event1 = learn::ResolveEvent {
         timestamp: "2025-01-01T00:00:00Z".to_string(),
-        directory: "/home/user/work/project1".to_string(),
-        remote: Some("github.com/company/project1".to_string()),
+        directory: Some("/home/user/work/project1".to_string()),
+        remote_url: Some("github.com/company/project1".to_string()),
         host: Some("github.com".to_string()),
         profile: "work".to_string(),
         reason: "directory rule".to_string(),
@@ -295,8 +323,8 @@ fn test_activity_log_write_and_read() {
 
     let event2 = learn::ResolveEvent {
         timestamp: "2025-01-01T01:00:00Z".to_string(),
-        directory: "/home/user/work/project2".to_string(),
-        remote: Some("github.com/company/project2".to_string()),
+        directory: Some("/home/user/work/project2".to_string()),
+        remote_url: Some("github.com/company/project2".to_string()),
         host: Some("github.com".to_string()),
         profile: "work".to_string(),
         reason: "directory rule".to_string(),
@@ -317,7 +345,10 @@ fn test_activity_log_write_and_read() {
 
     assert_eq!(events.len(), 2);
     assert_eq!(events[0].profile, "work");
-    assert_eq!(events[1].directory, "/home/user/work/project2");
+    assert_eq!(
+        events[1].directory.as_deref(),
+        Some("/home/user/work/project2")
+    );
 }
 
 // =============================================================================
@@ -361,21 +392,21 @@ fn test_repo_root_detection() {
 #[test]
 fn test_team_config_parse() {
     let toml_content = r#"
-[constraints]
+[identity]
 required_domain = "company.com"
 require_signing = false
 
-[[profile_hints]]
-name = "Work Profile"
+[[profiles]]
+name_pattern = "Work Profile"
 email_pattern = "*@company.com"
 "#;
 
     let config: gitid_core::team::TeamConfig = toml::from_str(toml_content).unwrap();
     assert_eq!(
-        config.constraints.required_domain.as_deref(),
+        config.identity.required_domain.as_deref(),
         Some("company.com")
     );
-    assert!(!config.constraints.require_signing);
-    assert_eq!(config.profile_hints.len(), 1);
-    assert_eq!(config.profile_hints[0].name, "Work Profile");
+    assert!(!config.identity.require_signing);
+    assert_eq!(config.profiles.len(), 1);
+    assert_eq!(config.profiles[0].name_pattern, "Work Profile");
 }

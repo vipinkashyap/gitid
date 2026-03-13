@@ -159,7 +159,10 @@ mod tests {
 
         assert_eq!(loaded.profiles.len(), 2);
         assert_eq!(loaded.get("personal").unwrap().email, "vipin@personal.dev");
-        assert_eq!(loaded.get("work").unwrap().username.as_deref(), Some("vipin-work"));
+        assert_eq!(
+            loaded.get("work").unwrap().username.as_deref(),
+            Some("vipin-work")
+        );
     }
 
     #[test]

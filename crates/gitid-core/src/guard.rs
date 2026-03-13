@@ -17,7 +17,11 @@ pub enum GuardVerdict {
     /// Email matches the expected profile — proceed.
     Ok { profile: String, email: String },
     /// Email mismatch detected.
-    Mismatch { profile: String, expected_email: String, actual_email: String },
+    Mismatch {
+        profile: String,
+        expected_email: String,
+        actual_email: String,
+    },
     /// No profile resolved — nothing to enforce.
     NoProfile,
     /// Not inside a git repository.

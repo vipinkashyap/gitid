@@ -457,14 +457,7 @@ fn detect_ssh_config() -> Vec<SshHostAlias> {
                 aliases.push(SshHostAlias {
                     alias,
                     hostname,
-                    identity_file: current_identity.take().map(|p| {
-                        // Normalize ~ paths
-                        if p.starts_with("~/") || p.starts_with("~\\") {
-                            p.to_string()
-                        } else {
-                            p.to_string()
-                        }
-                    }),
+                    identity_file: current_identity.take(),
                     user: current_user.take(),
                 });
             }
@@ -601,10 +594,7 @@ fn scan_directory_for_repos(dir: &Path, repos: &mut Vec<ScannedRepo>, depth: usi
 }
 
 fn read_repo_identity(repo_path: &Path) -> Option<ScannedRepo> {
-    let name = repo_path
-        .file_name()?
-        .to_string_lossy()
-        .to_string();
+    let name = repo_path.file_name()?.to_string_lossy().to_string();
 
     let user_name = git_config_local(repo_path, "user.name");
     let user_email = git_config_local(repo_path, "user.email");
@@ -740,10 +730,8 @@ fn cluster_signals(
         let name = names.first().cloned().unwrap_or_default();
 
         // Pick the best SSH key
-        let ssh_key = if ssh_keys.len() == 1 {
+        let ssh_key = if !ssh_keys.is_empty() {
             Some(ssh_keys[0].clone())
-        } else if !ssh_keys.is_empty() {
-            Some(ssh_keys[0].clone()) // Prefer first found
         } else {
             // Try matching by naming convention
             guess_ssh_key_for_email(email, &name_to_key, all_keys)
@@ -756,11 +744,8 @@ fn cluster_signals(
         let suggested_name = infer_profile_name(email, &dirs, &repo_paths);
 
         // Confidence score (0.0 to 1.0)
-        let confidence = compute_confidence(
-            signals.len(),
-            ssh_key.is_some(),
-            !repo_paths.is_empty(),
-        );
+        let confidence =
+            compute_confidence(signals.len(), ssh_key.is_some(), !repo_paths.is_empty());
 
         profiles.push(SuggestedProfile {
             suggested_name,
@@ -875,7 +860,11 @@ fn infer_profile_name(email: &str, dirs: &[String], repo_paths: &[String]) -> St
     }
 
     // Check directory hints
-    let all_paths: Vec<&str> = dirs.iter().chain(repo_paths.iter()).map(|s| s.as_str()).collect();
+    let all_paths: Vec<&str> = dirs
+        .iter()
+        .chain(repo_paths.iter())
+        .map(|s| s.as_str())
+        .collect();
     for path in &all_paths {
         let lower = path.to_lowercase();
         if lower.contains("/work/") || lower.contains("/work") {

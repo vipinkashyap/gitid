@@ -105,10 +105,7 @@ impl TeamConfig {
                 message: if passes {
                     format!("Email {} matches required domain @{}", email, domain)
                 } else {
-                    format!(
-                        "Email {} does not match required domain @{}",
-                        email, domain
-                    )
+                    format!("Email {} does not match required domain @{}", email, domain)
                 },
             });
         }
@@ -147,18 +144,14 @@ impl TeamConfig {
                     message: if passes {
                         "SSH key fingerprint is in the allowed list".into()
                     } else {
-                        format!(
-                            "SSH key fingerprint {} is not in the allowed list",
-                            fp
-                        )
+                        format!("SSH key fingerprint {} is not in the allowed list", fp)
                     },
                 });
             } else {
                 checks.push(TeamCheck {
                     name: "ssh_fingerprint".into(),
                     passed: false,
-                    message: "No SSH key configured but team requires specific keys"
-                        .into(),
+                    message: "No SSH key configured but team requires specific keys".into(),
                 });
             }
         }
