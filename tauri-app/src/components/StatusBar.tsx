@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import GuardPanel from "./GuardPanel";
 import SuggestionsPanel from "./SuggestionsPanel";
+import CliInstallBanner from "./CliInstallBanner";
 
 // =============================================================================
 // Status Check Panel
@@ -269,6 +270,7 @@ export default function StatusBar() {
         </p>
       </div>
 
+      <CliInstallBanner />
       <GuardPanel />
       <OverviewStats />
       <SuggestionsPanel />

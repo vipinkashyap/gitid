@@ -120,14 +120,20 @@ jobs:
           projectPath: tauri-app
           args: --target ${{ matrix.target }}
 
+      - name: Collect desktop bundles
+        run: |
+          mkdir -p desktop-out
+          find tauri-app/src-tauri/target/${{ matrix.target }}/release/bundle \
+            -type f \( -name "*.dmg" -o -name "*.AppImage" -o -name "*.deb" \) \
+            -exec cp {} desktop-out/ \; 2>/dev/null || true
+          ls -la desktop-out/ || echo "No bundles found"
+
       - name: Upload desktop artifacts
         uses: actions/upload-artifact@v4
+        if: hashFiles('desktop-out/*') != ''
         with:
           name: desktop-${{ matrix.platform }}
-          path: |
-            tauri-app/src-tauri/target/${{ matrix.target }}/release/bundle/dmg/*.dmg
-            tauri-app/src-tauri/target/${{ matrix.target }}/release/bundle/appimage/*.AppImage
-            tauri-app/src-tauri/target/${{ matrix.target }}/release/bundle/deb/*.deb
+          path: desktop-out/*
 
   # Create GitHub Release with all artifacts
   release:
@@ -146,9 +152,14 @@ jobs:
         run: |
           mkdir -p release
           # CLI binaries
-          find artifacts/cli-* -type f -exec cp {} release/ \;
+          for dir in artifacts/cli-*; do
+            [ -d "$dir" ] && find "$dir" -type f -exec cp {} release/ \;
+          done
           # Desktop bundles
-          find artifacts/desktop-* -type f \( -name "*.dmg" -o -name "*.AppImage" -o -name "*.deb" \) -exec cp {} release/ \;
+          for dir in artifacts/desktop-*; do
+            [ -d "$dir" ] && find "$dir" -type f -exec cp {} release/ \;
+          done
+          echo "Release contents:"
           ls -la release/
 
       - name: Create Release

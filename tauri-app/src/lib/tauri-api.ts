@@ -269,3 +269,21 @@ export async function applySuggestion(
 ): Promise<void> {
   return invoke("apply_suggestion", { ruleType, pattern, profile });
 }
+
+// =============================================================================
+// CLI Installation API
+// =============================================================================
+
+export interface CliStatusDto {
+  installed: boolean;
+  path: string | null;
+  version: string | null;
+}
+
+export async function checkCliInstalled(): Promise<CliStatusDto> {
+  return invoke("check_cli_installed");
+}
+
+export async function installCli(): Promise<string> {
+  return invoke("install_cli");
+}

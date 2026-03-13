@@ -1,0 +1,73 @@
+{
+  "name": "gitid",
+  "displayName": "GitID",
+  "description": "Automatic Git identity switching — resolves the correct profile when you open a workspace",
+  "version": "0.1.0",
+  "publisher": "vipinkashyap",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vipinkashyap/gitid"
+  },
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "SCM Providers",
+    "Other"
+  ],
+  "keywords": [
+    "git",
+    "identity",
+    "profile",
+    "multi-account",
+    "ssh"
+  ],
+  "activationEvents": [
+    "workspaceContains:.git"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "gitid.resolve",
+        "title": "GitID: Resolve Identity"
+      },
+      {
+        "command": "gitid.status",
+        "title": "GitID: Show Active Profile"
+      }
+    ],
+    "configuration": {
+      "title": "GitID",
+      "properties": {
+        "gitid.autoResolve": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically resolve Git identity when opening a workspace"
+        },
+        "gitid.cliPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to the gitid binary (leave empty to use PATH)"
+        },
+        "gitid.showStatusBarItem": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show active GitID profile in the status bar"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.80.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "@vscode/vsce": "^2.22.0"
+  }
+}

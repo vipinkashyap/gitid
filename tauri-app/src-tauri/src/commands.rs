@@ -6,6 +6,7 @@ use gitid_core::{config_writer, detect, guard, keychain, learn, profile::Profile
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::path::PathBuf;
+use tauri::Manager;
 
 // =============================================================================
 // Shared types for the frontend
@@ -504,4 +505,92 @@ pub fn apply_suggestion(rule_type: String, pattern: String, profile: String) -> 
         _ => return Err(format!("Unknown rule type: {}", rule_type)),
     }
     store::save_rules(&rules).map_err(|e| e.to_string())
+}
+
+// =============================================================================
+// CLI Installation — install/check CLI binary from the bundled app
+// =============================================================================
+
+#[derive(Debug, Clone, Serialize)]
+pub struct CliStatusDto {
+    pub installed: bool,
+    pub path: Option<String>,
+    pub version: Option<String>,
+}
+
+#[tauri::command]
+pub fn check_cli_installed() -> CliStatusDto {
+    match which::which("gitid") {
+        Ok(path) => {
+            let version = std::process::Command::new(&path)
+                .arg("--version")
+                .output()
+                .ok()
+                .and_then(|o| String::from_utf8(o.stdout).ok())
+                .map(|s| s.trim().to_string());
+            CliStatusDto {
+                installed: true,
+                path: Some(path.display().to_string()),
+                version,
+            }
+        }
+        Err(_) => CliStatusDto {
+            installed: false,
+            path: None,
+            version: None,
+        },
+    }
+}
+
+#[tauri::command]
+pub fn install_cli(app_handle: tauri::AppHandle) -> Result<String, String> {
+    // Determine the install directory
+    let install_dir = dirs::home_dir()
+        .ok_or("Cannot find home directory")?
+        .join(".local")
+        .join("bin");
+
+    std::fs::create_dir_all(&install_dir)
+        .map_err(|e| format!("Failed to create {}: {}", install_dir.display(), e))?;
+
+    // Get the path to the bundled CLI sidecar
+    let resource_dir = app_handle
+        .path()
+        .resource_dir()
+        .map_err(|e| format!("Cannot find resource dir: {}", e))?;
+
+    let bundled_cli = resource_dir.join("gitid-cli");
+    let bundled_cred = resource_dir.join("git-credential-gitid");
+
+    let target_cli = install_dir.join("gitid");
+    let target_cred = install_dir.join("git-credential-gitid");
+
+    if bundled_cli.exists() {
+        std::fs::copy(&bundled_cli, &target_cli)
+            .map_err(|e| format!("Failed to copy gitid: {}", e))?;
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            std::fs::set_permissions(&target_cli, std::fs::Permissions::from_mode(0o755))
+                .map_err(|e| format!("Failed to set permissions: {}", e))?;
+        }
+    } else {
+        return Err(
+            "CLI binary not bundled. Install manually: cargo install --path crates/gitid-cli"
+                .to_string(),
+        );
+    }
+
+    if bundled_cred.exists() {
+        std::fs::copy(&bundled_cred, &target_cred)
+            .map_err(|e| format!("Failed to copy git-credential-gitid: {}", e))?;
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            std::fs::set_permissions(&target_cred, std::fs::Permissions::from_mode(0o755))
+                .map_err(|e| format!("Failed to set permissions: {}", e))?;
+        }
+    }
+
+    Ok(install_dir.display().to_string())
 }

@@ -43,6 +43,9 @@ fn main() {
             get_suggestions,
             get_activity_count,
             apply_suggestion,
+            // CLI installation
+            check_cli_installed,
+            install_cli,
         ])
         .setup(|_app| {
             // System tray will be configured here
