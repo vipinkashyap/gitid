@@ -62,13 +62,11 @@ fn read_git_config(dir: &Path, key: &str) -> Option<String> {
 
 /// Create a test profile.
 fn work_profile() -> Profile {
-    Profile::new("Work Dev", "dev@company.com")
-        .with_hosts(vec!["github.com".to_string()])
+    Profile::new("Work Dev", "dev@company.com").with_hosts(vec!["github.com".to_string()])
 }
 
 fn personal_profile() -> Profile {
-    Profile::new("Personal", "me@personal.com")
-        .with_hosts(vec!["github.com".to_string()])
+    Profile::new("Personal", "me@personal.com").with_hosts(vec!["github.com".to_string()])
 }
 
 // =============================================================================
@@ -226,8 +224,7 @@ fn test_apply_profile_with_ssh_key() {
     fs::create_dir_all(&repo_dir).unwrap();
     init_git_repo(&repo_dir);
 
-    let profile = Profile::new("Dev", "dev@company.com")
-        .with_ssh_key("/home/dev/.ssh/work_key");
+    let profile = Profile::new("Dev", "dev@company.com").with_ssh_key("/home/dev/.ssh/work_key");
     config_writer::apply_profile_to_repo(&repo_dir, &profile).unwrap();
 
     let ssh_command = read_git_config(&repo_dir, "core.sshCommand");

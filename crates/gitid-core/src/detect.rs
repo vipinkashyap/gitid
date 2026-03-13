@@ -275,7 +275,11 @@ fn read_git_config_global(key: &str) -> Option<String> {
         .ok()?;
     if output.status.success() {
         let val = String::from_utf8_lossy(&output.stdout).trim().to_string();
-        if val.is_empty() { None } else { Some(val) }
+        if val.is_empty() {
+            None
+        } else {
+            Some(val)
+        }
     } else {
         None
     }
@@ -445,7 +449,9 @@ fn detect_ssh_config() -> Vec<SshHostAlias> {
             continue;
         }
 
-        if trimmed.to_lowercase().starts_with("host ") && !trimmed.to_lowercase().starts_with("hostname") {
+        if trimmed.to_lowercase().starts_with("host ")
+            && !trimmed.to_lowercase().starts_with("hostname")
+        {
             // Save previous entry
             if let (Some(alias), Some(hostname)) = (current_alias.take(), current_hostname.take()) {
                 aliases.push(SshHostAlias {
@@ -628,7 +634,11 @@ fn git_config_local(repo_path: &Path, key: &str) -> Option<String> {
         .ok()?;
     if output.status.success() {
         let val = String::from_utf8_lossy(&output.stdout).trim().to_string();
-        if val.is_empty() { None } else { Some(val) }
+        if val.is_empty() {
+            None
+        } else {
+            Some(val)
+        }
     } else {
         None
     }
@@ -642,7 +652,11 @@ fn git_remote_url(repo_path: &Path) -> Option<String> {
         .ok()?;
     if output.status.success() {
         let val = String::from_utf8_lossy(&output.stdout).trim().to_string();
-        if val.is_empty() { None } else { Some(val) }
+        if val.is_empty() {
+            None
+        } else {
+            Some(val)
+        }
     } else {
         None
     }
@@ -653,7 +667,10 @@ fn git_remote_url(repo_path: &Path) -> Option<String> {
 // =============================================================================
 
 /// Cluster identity signals into suggested profiles, grouped by email.
-fn cluster_signals(signals: Vec<IdentitySignal>, all_keys: &[DetectedSshKey]) -> Vec<SuggestedProfile> {
+fn cluster_signals(
+    signals: Vec<IdentitySignal>,
+    all_keys: &[DetectedSshKey],
+) -> Vec<SuggestedProfile> {
     // Group signals by email (lowercased)
     let mut clusters: HashMap<String, Vec<IdentitySignal>> = HashMap::new();
 
@@ -739,7 +756,11 @@ fn cluster_signals(signals: Vec<IdentitySignal>, all_keys: &[DetectedSshKey]) ->
         let suggested_name = infer_profile_name(email, &dirs, &repo_paths);
 
         // Confidence score (0.0 to 1.0)
-        let confidence = compute_confidence(signals.len(), ssh_key.is_some(), !repo_paths.is_empty());
+        let confidence = compute_confidence(
+            signals.len(),
+            ssh_key.is_some(),
+            !repo_paths.is_empty(),
+        );
 
         profiles.push(SuggestedProfile {
             suggested_name,
@@ -755,7 +776,11 @@ fn cluster_signals(signals: Vec<IdentitySignal>, all_keys: &[DetectedSshKey]) ->
     }
 
     // Sort by confidence descending
-    profiles.sort_by(|a, b| b.confidence.partial_cmp(&a.confidence).unwrap_or(std::cmp::Ordering::Equal));
+    profiles.sort_by(|a, b| {
+        b.confidence
+            .partial_cmp(&a.confidence)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
     profiles
 }
 
@@ -774,7 +799,10 @@ fn guess_ssh_key_for_email(
     }
 
     // Check naming conventions
-    if email_lower.contains("work") || email_lower.contains("company") || email_lower.contains("corp") {
+    if email_lower.contains("work")
+        || email_lower.contains("company")
+        || email_lower.contains("corp")
+    {
         if let Some(k) = name_to_key.get("work") {
             return Some(k.clone());
         }
@@ -836,7 +864,10 @@ fn infer_profile_name(email: &str, dirs: &[String], repo_paths: &[String]) -> St
     let email_lower = email.to_lowercase();
 
     // Check email domain hints
-    if email_lower.contains("work") || email_lower.contains("company") || email_lower.contains("corp") {
+    if email_lower.contains("work")
+        || email_lower.contains("company")
+        || email_lower.contains("corp")
+    {
         return "work".into();
     }
     if email_lower.contains("oss") || email_lower.contains("opensource") {
@@ -905,9 +936,15 @@ fn to_tilde_path(path: &Path) -> String {
 
 fn extract_host(url: &str) -> Option<String> {
     if url.starts_with("https://") || url.starts_with("http://") {
-        url.split("://").nth(1).and_then(|r| r.split('/').next()).map(String::from)
+        url.split("://")
+            .nth(1)
+            .and_then(|r| r.split('/').next())
+            .map(String::from)
     } else if url.contains('@') && url.contains(':') {
-        url.split('@').nth(1).and_then(|r| r.split(':').next()).map(String::from)
+        url.split('@')
+            .nth(1)
+            .and_then(|r| r.split(':').next())
+            .map(String::from)
     } else {
         None
     }

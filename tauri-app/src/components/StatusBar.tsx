@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useRepoScan, useProfiles } from "@/lib/hooks";
+import { useStatus, useRepoScan, useProfiles } from "@/lib/hooks";
 import type { DetectedRepo } from "@/lib/tauri-api";
 import {
   Card,

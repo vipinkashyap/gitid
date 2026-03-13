@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import * as api from "@/lib/tauri-api";
 import type {
   DetectionResult,
+  SuggestedProfile,
+  DetectedSshKey,
   ProfileDto,
 } from "@/lib/tauri-api";
 import { Card, CardContent, Button, Badge, Input } from "./ui/primitives";

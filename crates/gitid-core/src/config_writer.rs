@@ -125,11 +125,7 @@ pub fn repo_root(path: &Path) -> Option<std::path::PathBuf> {
         .ok()?;
 
     if output.status.success() {
-        Some(
-            String::from_utf8_lossy(&output.stdout)
-                .trim()
-                .into(),
-        )
+        Some(String::from_utf8_lossy(&output.stdout).trim().into())
     } else {
         None
     }

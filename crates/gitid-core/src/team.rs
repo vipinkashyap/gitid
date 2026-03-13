@@ -137,21 +137,28 @@ impl TeamConfig {
         // Check SSH fingerprint
         if !self.identity.allowed_ssh_fingerprints.is_empty() {
             if let Some(fp) = ssh_fingerprint {
-                let passes = self.identity.allowed_ssh_fingerprints.contains(&fp.to_string());
+                let passes = self
+                    .identity
+                    .allowed_ssh_fingerprints
+                    .contains(&fp.to_string());
                 checks.push(TeamCheck {
                     name: "ssh_fingerprint".into(),
                     passed: passes,
                     message: if passes {
                         "SSH key fingerprint is in the allowed list".into()
                     } else {
-                        format!("SSH key fingerprint {} is not in the allowed list", fp)
+                        format!(
+                            "SSH key fingerprint {} is not in the allowed list",
+                            fp
+                        )
                     },
                 });
             } else {
                 checks.push(TeamCheck {
                     name: "ssh_fingerprint".into(),
                     passed: false,
-                    message: "No SSH key configured but team requires specific keys".into(),
+                    message: "No SSH key configured but team requires specific keys"
+                        .into(),
                 });
             }
         }

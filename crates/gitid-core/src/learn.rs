@@ -119,10 +119,7 @@ pub fn read_events() -> Result<Vec<ResolveEvent>> {
 pub fn clear_log() -> Result<()> {
     let path = activity_log_path()?;
     if path.exists() {
-        fs::write(&path, "").map_err(|e| Error::Io {
-            path,
-            source: e,
-        })?;
+        fs::write(&path, "").map_err(|e| Error::Io { path, source: e })?;
     }
     Ok(())
 }
@@ -251,10 +248,7 @@ fn suggest_host_rules(
                 profile: profile.clone(),
                 pattern: host.clone(),
                 evidence_count: *count,
-                reason: format!(
-                    "Used '{}' for {} {} times",
-                    profile, host, count
-                ),
+                reason: format!("Used '{}' for {} {} times", profile, host, count),
             });
         }
     }

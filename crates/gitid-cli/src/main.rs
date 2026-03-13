@@ -356,10 +356,7 @@ fn cmd_init() -> Result<(), Box<dyn std::error::Error>> {
     // Check if already initialized
     let profiles = store::load_profiles()?;
     if !profiles.profiles.is_empty() {
-        println!(
-            "{}",
-            style("GitID is already configured with profiles.").yellow()
-        );
+        println!("{}", style("GitID is already configured with profiles.").yellow());
         if !Confirm::new()
             .with_prompt("Add another profile?")
             .default(true)
@@ -416,15 +413,12 @@ fn cmd_install() -> Result<(), Box<dyn std::error::Error>> {
     config_writer::install_credential_helper()?;
     println!(
         "{} Registered as git credential helper (credential.helper = gitid)",
-        style("✓").green()
+        style("✓").green(),
     );
 
     // Check that the binary is in PATH
     if which::which("git-credential-gitid").is_err() {
-        println!(
-            "{}",
-            style("⚠ Warning: git-credential-gitid not found in PATH").yellow()
-        );
+        println!("{}", style("⚠ Warning: git-credential-gitid not found in PATH").yellow());
         println!("  Make sure the binary is installed and accessible.");
     }
 
@@ -466,7 +460,10 @@ fn cmd_profile_add(name: &str) -> Result<(), Box<dyn std::error::Error>> {
     let mut profiles = store::load_profiles()?;
 
     if profiles.contains(name) {
-        return Err(format!("Profile '{}' already exists. Use 'gitid profile edit {}'.", name, name).into());
+        return Err(
+            format!("Profile '{}' already exists. Use 'gitid profile edit {}'.", name, name)
+                .into(),
+        );
     }
 
     let git_name: String = Input::new()
@@ -525,25 +522,12 @@ fn cmd_profile_show(name: &str) -> Result<(), Box<dyn std::error::Error>> {
     println!("{}", style(format!("Profile: {}", name)).bold());
     println!("  Name:        {}", profile.name);
     println!("  Email:       {}", profile.email);
-    println!(
-        "  SSH Key:     {}",
-        profile.ssh_key.as_deref().unwrap_or("(none)")
-    );
-    println!(
-        "  Signing Key: {}",
-        profile.signing_key.as_deref().unwrap_or("(none)")
-    );
-    println!(
-        "  Username:    {}",
-        profile.username.as_deref().unwrap_or("(none)")
-    );
+    println!("  SSH Key:     {}", profile.ssh_key.as_deref().unwrap_or("(none)"));
+    println!("  Signing Key: {}", profile.signing_key.as_deref().unwrap_or("(none)"));
+    println!("  Username:    {}", profile.username.as_deref().unwrap_or("(none)"));
     println!(
         "  Hosts:       {}",
-        if profile.hosts.is_empty() {
-            "(none)".into()
-        } else {
-            profile.hosts.join(", ")
-        }
+        if profile.hosts.is_empty() { "(none)".into() } else { profile.hosts.join(", ") }
     );
 
     // Validate SSH key if set
@@ -558,10 +542,7 @@ fn cmd_profile_show(name: &str) -> Result<(), Box<dyn std::error::Error>> {
                 }
             }
         } else {
-            println!(
-                "  SSH Status:  {}",
-                style("key NOT FOUND ✗").red()
-            );
+            println!("  SSH Status:  {}", style("key NOT FOUND ✗").red());
         }
     }
 
@@ -671,7 +652,7 @@ fn cmd_rule_add(
                 "{} Directory rule added: {} → {}",
                 style("✓").green(),
                 style(pattern).cyan(),
-                style(profile_name).bold()
+                style(profile_name).bold(),
             );
         }
         "remote" | "url" => {
@@ -680,7 +661,7 @@ fn cmd_rule_add(
                 "{} Remote URL rule added: {} → {}",
                 style("✓").green(),
                 style(pattern).cyan(),
-                style(profile_name).bold()
+                style(profile_name).bold(),
             );
         }
         "host" => {
@@ -689,7 +670,7 @@ fn cmd_rule_add(
                 "{} Host rule added: {} → {}",
                 style("✓").green(),
                 style(pattern).cyan(),
-                style(profile_name).bold()
+                style(profile_name).bold(),
             );
         }
         _ => {
@@ -769,7 +750,15 @@ fn cmd_rule_remove(rule_type: &str, index: usize) -> Result<(), Box<dyn std::err
         "host" => rules
             .remove_host_rule(index)
             .map(|r| format!("host: {} → {}", r.host, r.profile)),
-        _ => return Err(format!("Unknown rule type '{}'. Use: dir, remote, or host", rule_type).into()),
+        _ => {
+            return Err(
+                format!(
+                    "Unknown rule type '{}'. Use: dir, remote, or host",
+                    rule_type,
+                )
+                .into(),
+            )
+        }
     };
 
     match removed {
@@ -801,10 +790,7 @@ fn cmd_status(path: Option<&Path>) -> Result<(), Box<dyn std::error::Error>> {
 
             println!("{}", style("GitID Status").bold());
             println!("  Directory:   {}", cwd.display());
-            println!(
-                "  Profile:     {}",
-                style(&result.profile_name).bold().green()
-            );
+            println!("  Profile:     {}", style(&result.profile_name).bold().green());
             println!("  Matched by:  {}", result.reason);
             println!("  Name:        {}", profile.name);
             println!("  Email:       {}", profile.email);
@@ -818,10 +804,7 @@ fn cmd_status(path: Option<&Path>) -> Result<(), Box<dyn std::error::Error>> {
         Err(_) => {
             println!("{}", style("No profile resolved for this directory.").yellow());
             println!("  Directory: {}", cwd.display());
-            println!(
-                "\nRun {} to set up rules.",
-                style("gitid init").cyan()
-            );
+            println!("\nRun {} to set up rules.", style("gitid init").cyan());
         }
     }
 
@@ -847,7 +830,7 @@ fn cmd_use(profile_name: &str) -> Result<(), Box<dyn std::error::Error>> {
     println!(
         "{} Using profile '{}' for this repo",
         style("✓").green(),
-        style(profile_name).bold()
+        style(profile_name).bold(),
     );
     println!("  Name:  {}", profile.name);
     println!("  Email: {}", profile.email);
@@ -943,11 +926,7 @@ fn cmd_doctor() -> Result<(), Box<dyn std::error::Error>> {
         println!("    Run: gitid init");
         issues += 1;
     } else {
-        println!(
-            "{} ({} profile(s))",
-            style("✓").green(),
-            profiles.profiles.len()
-        );
+        println!("{} ({} profile(s))", style("✓").green(), profiles.profiles.len());
     }
 
     // 4. Check SSH keys for each profile
@@ -996,10 +975,7 @@ fn cmd_doctor() -> Result<(), Box<dyn std::error::Error>> {
     // Summary
     println!();
     if issues == 0 {
-        println!(
-            "{}",
-            style("All checks passed! GitID is healthy.").bold().green()
-        );
+        println!("{}", style("All checks passed! GitID is healthy.").bold().green());
     } else {
         println!(
             "{}",
@@ -1218,11 +1194,7 @@ fn cmd_clone(url: &str, directory: Option<&str>) -> Result<(), Box<dyn std::erro
         cmd.arg(dir);
     }
 
-    println!(
-        "{} Cloning {}...\n",
-        style("→").cyan(),
-        style(url).underlined()
-    );
+    println!("{} Cloning {}...\n", style("→").cyan(), style(url).underlined());
 
     let status = cmd.status().map_err(|e| {
         format!("Failed to run git clone: {}", e)
@@ -1335,10 +1307,7 @@ fn cmd_shell_init(shell: &str) -> Result<(), Box<dyn std::error::Error>> {
 
 fn cmd_guard_install() -> Result<(), Box<dyn std::error::Error>> {
     guard::install()?;
-    println!(
-        "{} Identity guard installed (global pre-commit hook)",
-        style("✓").green()
-    );
+    println!("{} Identity guard installed (global pre-commit hook)", style("✓").green());
     println!("  Every commit will now be checked against your GitID profiles.");
     println!("  To skip temporarily: GITID_GUARD_SKIP=1 git commit ...");
     Ok(())
@@ -1346,10 +1315,7 @@ fn cmd_guard_install() -> Result<(), Box<dyn std::error::Error>> {
 
 fn cmd_guard_uninstall() -> Result<(), Box<dyn std::error::Error>> {
     guard::uninstall()?;
-    println!(
-        "{} Identity guard uninstalled",
-        style("✓").green()
-    );
+    println!("{} Identity guard uninstalled", style("✓").green());
     Ok(())
 }
 
@@ -1401,16 +1367,10 @@ fn cmd_guard_check(json: bool) -> Result<(), Box<dyn std::error::Error>> {
                 expected_email,
                 actual_email,
             } => {
-                println!(
-                    "{} Email mismatch!",
-                    style("✗").red()
-                );
+                println!("{} Email mismatch!", style("✗").red());
                 println!("  Expected: {} (profile: {})", expected_email, profile);
                 println!("  Actual:   {}", actual_email);
-                println!(
-                    "\n  Fix with: {}",
-                    style("gitid guard fix").cyan()
-                );
+                println!("\n  Fix with: {}", style("gitid guard fix").cyan());
             }
             guard::GuardVerdict::NoProfile => {
                 println!(
@@ -1419,10 +1379,7 @@ fn cmd_guard_check(json: bool) -> Result<(), Box<dyn std::error::Error>> {
                 );
             }
             guard::GuardVerdict::NotARepo => {
-                println!(
-                    "{} Not inside a git repository",
-                    style("⚠").yellow()
-                );
+                println!("{} Not inside a git repository", style("⚠").yellow());
             }
         }
     }
@@ -1433,29 +1390,17 @@ fn cmd_guard_check(json: bool) -> Result<(), Box<dyn std::error::Error>> {
 fn cmd_guard_fix() -> Result<(), Box<dyn std::error::Error>> {
     let cwd = std::env::current_dir()?;
     guard::fix_mismatch(&cwd)?;
-    println!(
-        "{} Applied the correct profile identity to this repo",
-        style("✓").green()
-    );
+    println!("{} Applied the correct profile identity to this repo", style("✓").green());
     Ok(())
 }
 
 fn cmd_guard_status() -> Result<(), Box<dyn std::error::Error>> {
     println!("{}", style("Identity Guard Status").bold());
     if guard::is_installed() {
-        println!(
-            "  Hook:    {}",
-            style("✓ installed (global pre-commit)").green()
-        );
+        println!("  Hook:    {}", style("✓ installed (global pre-commit)").green());
     } else {
-        println!(
-            "  Hook:    {}",
-            style("✗ not installed").red()
-        );
-        println!(
-            "  Install: {}",
-            style("gitid guard install").cyan()
-        );
+        println!("  Hook:    {}", style("✗ not installed").red());
+        println!("  Install: {}", style("gitid guard install").cyan());
     }
 
     // Also show check result for current dir

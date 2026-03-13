@@ -2,7 +2,9 @@
 //!
 //! Each #[tauri::command] function is callable from TypeScript via invoke().
 
-use gitid_core::{config_writer, detect, guard, keychain, learn, profile::Profile, resolver, ssh, store};
+use gitid_core::{
+    config_writer, detect, guard, keychain, learn, profile::Profile, resolver, ssh, store,
+};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::path::PathBuf;
@@ -98,13 +100,18 @@ pub struct DetectedRepo {
 #[tauri::command]
 pub fn get_profiles() -> Result<BTreeMap<String, ProfileDto>, String> {
     let s = store::load_profiles().map_err(|e| e.to_string())?;
-    Ok(s.profiles.iter().map(|(k, v)| (k.clone(), ProfileDto::from(v))).collect())
+    Ok(s.profiles
+        .iter()
+        .map(|(k, v)| (k.clone(), ProfileDto::from(v)))
+        .collect())
 }
 
 #[tauri::command]
 pub fn get_profile(name: String) -> Result<ProfileDto, String> {
     let s = store::load_profiles().map_err(|e| e.to_string())?;
-    s.get(&name).map(ProfileDto::from).ok_or_else(|| format!("Profile '{}' not found", name))
+    s.get(&name)
+        .map(ProfileDto::from)
+        .ok_or_else(|| format!("Profile '{}' not found", name))
 }
 
 #[tauri::command]
@@ -130,7 +137,8 @@ pub fn update_profile(name: String, profile: ProfileDto) -> Result<(), String> {
 #[tauri::command]
 pub fn delete_profile(name: String) -> Result<(), String> {
     let mut s = store::load_profiles().map_err(|e| e.to_string())?;
-    s.remove(&name).ok_or_else(|| format!("Profile '{}' not found", name))?;
+    s.remove(&name)
+        .ok_or_else(|| format!("Profile '{}' not found", name))?;
     store::save_profiles(&s).map_err(|e| e.to_string())
 }
 
@@ -145,19 +153,37 @@ pub fn get_rules() -> Result<RulesDto, String> {
     let mut id = 0;
 
     for rule in &rs.directory {
-        rules.push(RuleDto { id, rule_type: "directory".into(), pattern: rule.path.clone(), profile: rule.profile.clone() });
+        rules.push(RuleDto {
+            id,
+            rule_type: "directory".into(),
+            pattern: rule.path.clone(),
+            profile: rule.profile.clone(),
+        });
         id += 1;
     }
     for rule in &rs.remote {
-        rules.push(RuleDto { id, rule_type: "remote".into(), pattern: rule.pattern.clone(), profile: rule.profile.clone() });
+        rules.push(RuleDto {
+            id,
+            rule_type: "remote".into(),
+            pattern: rule.pattern.clone(),
+            profile: rule.profile.clone(),
+        });
         id += 1;
     }
     for rule in &rs.host {
-        rules.push(RuleDto { id, rule_type: "host".into(), pattern: rule.host.clone(), profile: rule.profile.clone() });
+        rules.push(RuleDto {
+            id,
+            rule_type: "host".into(),
+            pattern: rule.host.clone(),
+            profile: rule.profile.clone(),
+        });
         id += 1;
     }
 
-    Ok(RulesDto { rules, default: rs.default })
+    Ok(RulesDto {
+        rules,
+        default: rs.default,
+    })
 }
 
 #[tauri::command]
@@ -208,15 +234,24 @@ pub fn reorder_rules(rule_type: String, new_order: Vec<usize>) -> Result<(), Str
     match rule_type.as_str() {
         "directory" => {
             let orig = rules.directory.clone();
-            rules.directory = new_order.iter().filter_map(|&i| orig.get(i).cloned()).collect();
+            rules.directory = new_order
+                .iter()
+                .filter_map(|&i| orig.get(i).cloned())
+                .collect();
         }
         "remote" => {
             let orig = rules.remote.clone();
-            rules.remote = new_order.iter().filter_map(|&i| orig.get(i).cloned()).collect();
+            rules.remote = new_order
+                .iter()
+                .filter_map(|&i| orig.get(i).cloned())
+                .collect();
         }
         "host" => {
             let orig = rules.host.clone();
-            rules.host = new_order.iter().filter_map(|&i| orig.get(i).cloned()).collect();
+            rules.host = new_order
+                .iter()
+                .filter_map(|&i| orig.get(i).cloned())
+                .collect();
         }
         _ => return Err(format!("Unknown rule type: {}", rule_type)),
     }
@@ -264,24 +299,54 @@ pub fn run_doctor() -> Result<Vec<DoctorCheck>, String> {
 
     // Credential helper
     checks.push(if config_writer::is_credential_helper_installed() {
-        DoctorCheck { name: "Credential Helper".into(), status: "ok".into(), message: "Registered".into(), fix: None }
+        DoctorCheck {
+            name: "Credential Helper".into(),
+            status: "ok".into(),
+            message: "Registered".into(),
+            fix: None,
+        }
     } else {
-        DoctorCheck { name: "Credential Helper".into(), status: "error".into(), message: "Not registered".into(), fix: Some("Click Install below".into()) }
+        DoctorCheck {
+            name: "Credential Helper".into(),
+            status: "error".into(),
+            message: "Not registered".into(),
+            fix: Some("Click Install below".into()),
+        }
     });
 
     // Binary
     checks.push(if which::which("git-credential-gitid").is_ok() {
-        DoctorCheck { name: "Credential Binary".into(), status: "ok".into(), message: "Found in PATH".into(), fix: None }
+        DoctorCheck {
+            name: "Credential Binary".into(),
+            status: "ok".into(),
+            message: "Found in PATH".into(),
+            fix: None,
+        }
     } else {
-        DoctorCheck { name: "Credential Binary".into(), status: "error".into(), message: "Not in PATH".into(), fix: Some("cargo install git-credential-gitid".into()) }
+        DoctorCheck {
+            name: "Credential Binary".into(),
+            status: "error".into(),
+            message: "Not in PATH".into(),
+            fix: Some("cargo install git-credential-gitid".into()),
+        }
     });
 
     // Profiles
     let profiles = store::load_profiles().map_err(|e| e.to_string())?;
     checks.push(if profiles.profiles.is_empty() {
-        DoctorCheck { name: "Profiles".into(), status: "error".into(), message: "None configured".into(), fix: Some("Create a profile".into()) }
+        DoctorCheck {
+            name: "Profiles".into(),
+            status: "error".into(),
+            message: "None configured".into(),
+            fix: Some("Create a profile".into()),
+        }
     } else {
-        DoctorCheck { name: "Profiles".into(), status: "ok".into(), message: format!("{} configured", profiles.profiles.len()), fix: None }
+        DoctorCheck {
+            name: "Profiles".into(),
+            status: "ok".into(),
+            message: format!("{} configured", profiles.profiles.len()),
+            fix: None,
+        }
     });
 
     // SSH keys
@@ -290,9 +355,19 @@ pub fn run_doctor() -> Result<Vec<DoctorCheck>, String> {
             let expanded = shellexpand::tilde(key_path);
             let path = std::path::Path::new(expanded.as_ref());
             checks.push(if path.exists() {
-                DoctorCheck { name: format!("SSH [{}]", name), status: "ok".into(), message: "Key exists".into(), fix: None }
+                DoctorCheck {
+                    name: format!("SSH [{}]", name),
+                    status: "ok".into(),
+                    message: "Key exists".into(),
+                    fix: None,
+                }
             } else {
-                DoctorCheck { name: format!("SSH [{}]", name), status: "error".into(), message: "Key not found".into(), fix: Some("Generate or import key".into()) }
+                DoctorCheck {
+                    name: format!("SSH [{}]", name),
+                    status: "error".into(),
+                    message: "Key not found".into(),
+                    fix: Some("Generate or import key".into()),
+                }
             });
         }
     }
@@ -300,18 +375,38 @@ pub fn run_doctor() -> Result<Vec<DoctorCheck>, String> {
     // Rules
     let rules = store::load_rules().map_err(|e| e.to_string())?;
     checks.push(if rules.total_rules() == 0 && rules.default.is_none() {
-        DoctorCheck { name: "Rules".into(), status: "warning".into(), message: "None configured".into(), fix: Some("Add rules".into()) }
+        DoctorCheck {
+            name: "Rules".into(),
+            status: "warning".into(),
+            message: "None configured".into(),
+            fix: Some("Add rules".into()),
+        }
     } else {
-        DoctorCheck { name: "Rules".into(), status: "ok".into(), message: format!("{} rule(s)", rules.total_rules()), fix: None }
+        DoctorCheck {
+            name: "Rules".into(),
+            status: "ok".into(),
+            message: format!("{} rule(s)", rules.total_rules()),
+            fix: None,
+        }
     });
 
     // Tokens
     for (name, profile) in &profiles.profiles {
         for host in &profile.hosts {
             checks.push(if keychain::has_token(name, host) {
-                DoctorCheck { name: format!("Token [{}@{}]", name, host), status: "ok".into(), message: "Stored".into(), fix: None }
+                DoctorCheck {
+                    name: format!("Token [{}@{}]", name, host),
+                    status: "ok".into(),
+                    message: "Stored".into(),
+                    fix: None,
+                }
             } else {
-                DoctorCheck { name: format!("Token [{}@{}]", name, host), status: "warning".into(), message: "Not stored".into(), fix: Some(format!("gitid token set {} {}", name, host)) }
+                DoctorCheck {
+                    name: format!("Token [{}@{}]", name, host),
+                    status: "warning".into(),
+                    message: "Not stored".into(),
+                    fix: Some(format!("gitid token set {} {}", name, host)),
+                }
             });
         }
     }
@@ -342,7 +437,11 @@ pub fn scan_repos(directory: String) -> Result<Vec<DetectedRepo>, String> {
         if path.is_dir() && path.join(".git").exists() {
             repos.push(DetectedRepo {
                 path: path.to_string_lossy().to_string(),
-                name: path.file_name().unwrap_or_default().to_string_lossy().to_string(),
+                name: path
+                    .file_name()
+                    .unwrap_or_default()
+                    .to_string_lossy()
+                    .to_string(),
                 remote_url: resolver::get_remote_url(&path),
                 current_profile: config_writer::read_local_config(&path, "gitid.profile"),
                 current_email: config_writer::read_local_config(&path, "user.email"),
@@ -356,7 +455,9 @@ pub fn scan_repos(directory: String) -> Result<Vec<DetectedRepo>, String> {
 #[tauri::command]
 pub fn test_ssh_connection(profile_name: String) -> Result<Vec<(String, bool)>, String> {
     let profiles = store::load_profiles().map_err(|e| e.to_string())?;
-    let profile = profiles.get(&profile_name).ok_or_else(|| format!("Profile '{}' not found", profile_name))?;
+    let profile = profiles
+        .get(&profile_name)
+        .ok_or_else(|| format!("Profile '{}' not found", profile_name))?;
     let key_path_str = profile.ssh_key.as_ref().ok_or("No SSH key configured")?;
     let expanded = shellexpand::tilde(key_path_str);
     let key_path = std::path::Path::new(expanded.as_ref());
@@ -425,9 +526,16 @@ pub fn guard_status() -> Result<GuardStatusDto, String> {
         guard::GuardVerdict::Ok { profile, email } => {
             ("ok".to_string(), Some(profile.clone()), Some(email.clone()), None)
         }
-        guard::GuardVerdict::Mismatch { profile, expected_email, actual_email } => {
-            ("mismatch".to_string(), Some(profile.clone()), Some(expected_email.clone()), Some(actual_email.clone()))
-        }
+        guard::GuardVerdict::Mismatch {
+            profile,
+            expected_email,
+            actual_email,
+        } => (
+            "mismatch".to_string(),
+            Some(profile.clone()),
+            Some(expected_email.clone()),
+            Some(actual_email.clone()),
+        ),
         guard::GuardVerdict::NoProfile => ("no_profile".to_string(), None, None, None),
         guard::GuardVerdict::NotARepo => ("not_a_repo".to_string(), None, None, None),
     };
@@ -495,7 +603,11 @@ pub fn get_activity_count() -> Result<usize, String> {
 }
 
 #[tauri::command]
-pub fn apply_suggestion(rule_type: String, pattern: String, profile: String) -> Result<(), String> {
+pub fn apply_suggestion(
+    rule_type: String,
+    pattern: String,
+    profile: String,
+) -> Result<(), String> {
     let mut rules = store::load_rules().map_err(|e| e.to_string())?;
     match rule_type.as_str() {
         "directory" => rules.add_directory_rule(&pattern, &profile),
